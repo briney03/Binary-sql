@@ -1,0 +1,12 @@
+# Binarios compilados
+motor
+*.o
+*.out
+a.out
+
+# Archivos de base de datos
+*.dat
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
