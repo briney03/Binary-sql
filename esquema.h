@@ -1,14 +1,33 @@
-// Las siguientes 2 líneas son "Guardas de Inclusión".
-// Evitan que el compilador se confunda si incluyes este archivo varias veces.
 #ifndef ESQUEMA_H
 #define ESQUEMA_H
 
-// Aquí vive el molde de tu base de datos
+typedef struct {
+    int id;
+    off_t offset;
+} IndiceEntrada;
+
 typedef struct {
     int id;
     char nombre[50];
     float salario;
     int activo;
 } Empleado;
+
+typedef struct {
+    int id;
+    char nombre[50];
+    char telefono[15];
+    int activo;
+} Cliente;
+
+typedef struct {
+    int id;
+    char nombre[50];
+    float precio;
+    int stock;
+    int activo;
+} Producto;
+
+typedef enum { Ninguna, Empleados, Clientes, Productos } TipoTabla;
 
 #endif
