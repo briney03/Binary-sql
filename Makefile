@@ -1,10 +1,23 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
+CFLAGS = -Wall -Wextra -std=c99 -I.
 TARGET = motor
-SOURCES = Motor.c
-HEADERS = esquema.h motor.h
+SOURCES = motor.c \
+          src/errors.c \
+          src/transaction.c \
+          src/index.c \
+          src/database.c \
+          src/io.c \
+          src/parser.c
+HEADERS = includes/config.h \
+          includes/types.h \
+          includes/index.h \
+          includes/transaction.h \
+          includes/parser.h \
+          includes/database.h \
+          includes/errors.h \
+          includes/io.h
 
-.PHONY: all clean run test
+.PHONY: all clean run test help
 
 all: $(TARGET)
 
@@ -12,25 +25,63 @@ $(TARGET): $(SOURCES) $(HEADERS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES)
 
 clean:
-	rm -f $(TARGET) *.o *.dat *.idx
+	rm -f $(TARGET) *.o
+	rm -rf data/
 
 run: $(TARGET)
 	./$(TARGET)
 
 test: $(TARGET)
-	rm -f *.dat *.idx
-	@echo "=== Test 1: INSERT y SELECT ==="
-	@echo "INSERT empleados 1 Juan 25000" | ./$(TARGET)
+	@echo "=== Test 1: Base de datos ==="
+	@rm -rf data/
+	@printf "CREAR BASE DE DATOS testdb\nUSAR testdb\nMOSTRAR BASES DE DATOS\nSALIR\n" | ./$(TARGET)
 	@echo ""
-	@echo "=== Test 2: UPDATE ==="
-	@echo "INSERT empleados 2 Pedro 30000" | ./$(TARGET)
-	@echo "UPDATE empleados 2 35000" | ./$(TARGET)
+	@echo "=== Test 2: Crear tablas dinamicas ==="
+	@rm -rf data/
+	@printf "CREAR BASE DE DATOS testdb\nUSAR testdb\nCREAR TABLA empleados (id INT, nombre STRING(50), salario FLOAT)\nCREAR TABLA productos (id INT, nombre STRING(50), precio FLOAT, stock INT)\nMOSTRAR TABLAS\nSALIR\n" | ./$(TARGET)
 	@echo ""
-	@echo "=== Test 3: DELETE y RESTORE ==="
-	@echo "DELETE empleados 1" | ./$(TARGET)
-	@echo "RESTORE empleados 1" | ./$(TARGET)
+	@echo "=== Test 3: INSERT y SELECT ==="
+	@rm -rf data/
+	@printf "CREAR BASE DE DATOS testdb\nUSAR testdb\nCREAR TABLA empleados (id INT, nombre STRING(50), salario FLOAT)\nINSERTAR empleados (1, Juan, 25000)\nINSERTAR empleados (2, Maria, 30000)\nINSERTAR empleados (3, Pedro, 28000)\nSELECCIONAR empleados\nSALIR\n" | ./$(TARGET)
 	@echo ""
-	@echo "=== Test 4: Transacciones ==="
-	@echo "START TRANSACTION" | ./$(TARGET)
-	@echo "INSERT empleados 3 Maria 40000" | ./$(TARGET)
-	@echo "ROLLBACK" | ./$(TARGET)
+	@echo "=== Test 4: ELIMINAR registro ==="
+	@rm -rf data/
+	@printf "CREAR BASE DE DATOS testdb\nUSAR testdb\nCREAR TABLA empleados (id INT, nombre STRING(50), salario FLOAT)\nINSERTAR empleados (1, Juan, 25000)\nINSERTAR empleados (2, Maria, 30000)\nELIMINAR empleados 1\nSELECCIONAR empleados\nSALIR\n" | ./$(TARGET)
+	@echo ""
+	@echo "=== Test 5: Transacciones ==="
+	@rm -rf data/
+	@printf "CREAR BASE DE DATOS testdb\nUSAR testdb\nCREAR TABLA empleados (id INT, nombre STRING(50), salario FLOAT)\nINICIAR TRANSACCION\nINSERTAR empleados (1, Juan, 25000)\nCONFIRMAR\nSELECCIONAR empleados\nSALIR\n" | ./$(TARGET)
+	@echo ""
+	@echo "=== Test 6: ELIMINAR TABLA y BD ==="
+	@rm -rf data/
+	@printf "CREAR BASE DE DATOS testdb\nUSAR testdb\nCREAR TABLA empleados (id INT, nombre STRING(50), salario FLOAT)\nELIMINAR TABLA empleados\nMOSTRAR TABLAS\nELIMINAR BASE DE DATOS testdb\nMOSTRAR BASES DE DATOS\nSALIR\n" | ./$(TARGET)
+
+help:
+	@echo "Motor de BD v0.3 - Comandos en ESPAÑOL:"
+	@echo ""
+	@echo "  Bases de datos:"
+	@echo "    CREAR BASE DE DATOS <nombre>  - Crear base de datos"
+	@echo "    USAR <base_de_datos>           - Seleccionar base de datos"
+	@echo "    MOSTRAR BASES DE DATOS         - Listar bases de datos"
+	@echo "    ELIMINAR BASE DE DATOS <nombre> - Eliminar base de datos"
+	@echo ""
+	@echo "  Tablas:"
+	@echo "    CREAR TABLA <nombre> (campo1 TIPO, ...) - Crear tabla"
+	@echo "    ELIMINAR TABLA <nombre>      - Eliminar tabla"
+	@echo "    MOSTRAR TABLAS                - Listar tablas"
+	@echo ""
+	@echo "  Registros (tablas dinamicas):"
+	@echo "    INSERTAR <tabla> (val1, val2, ...) - Insertar"
+	@echo "    SELECCIONAR <tabla>          - Mostrar registros"
+	@echo "    ELIMINAR <tabla> <id>        - Eliminar registro"
+	@echo ""
+	@echo "  Transacciones:"
+	@echo "    INICIAR TRANSACCION           - Iniciar transaccion"
+	@echo "    CONFIRMAR                     - Confirmar cambios"
+	@echo "    DESHACER                      - Deshacer cambios"
+	@echo ""
+	@echo "  Utilidades:"
+	@echo "    REINDEXAR <tabla>             - Reconstruir indice"
+	@echo "    SALIR                         - Salir"
+	@echo ""
+	@echo "  Tipos: INT, FLOAT, STRING(n)"
