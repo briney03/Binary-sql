@@ -39,7 +39,7 @@
       <aside class="w-64 bg-surface-800 border-r border-surface-600 flex flex-col">
         <!-- Logo -->
         <div class="p-4 border-b border-surface-600">
-          <div class="flex items-center gap-3">
+          <div class="sidebar-logo flex items-center gap-3">
             <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-accent-400 to-cyan-600 flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
@@ -53,7 +53,7 @@
         </div>
 
         <!-- Schema Explorer -->
-        <div class="p-4 border-b border-surface-600">
+        <div class="sidebar-section p-4 border-b border-surface-600">
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs text-slate-400">Active Schema</span>
             <div id="schema-status" class="w-2 h-2 rounded-full bg-slate-600"></div>
@@ -62,7 +62,7 @@
         </div>
 
         <!-- Databases -->
-        <div class="flex-1 overflow-hidden flex flex-col border-b border-surface-600">
+        <div class="sidebar-section flex-1 overflow-hidden flex flex-col border-b border-surface-600">
           <div class="px-4 py-3 border-b border-surface-600 flex items-center justify-between">
             <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Databases</h3>
             <span id="db-count" class="text-xs text-accent-400 font-medium">0</span>
@@ -73,7 +73,7 @@
         </div>
 
         <!-- Tables -->
-        <div class="flex-1 overflow-hidden flex flex-col">
+        <div class="sidebar-section flex-1 overflow-hidden flex flex-col">
           <div class="px-4 py-3 border-b border-surface-600 flex items-center justify-between">
             <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tables</h3>
             <span id="table-count" class="text-xs text-accent-400 font-medium">0</span>

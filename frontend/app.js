@@ -459,8 +459,52 @@ queryInput.addEventListener('keydown', (e) => {
 });
 
 setStatus(false, 'Offline');
-addTab();
-loadDatabases();
+
+// Dramatic entrance animation
+function dramaticEntrance() {
+  const tl = gsap.timeline();
+
+  // Reset initial states
+  gsap.set('aside', { opacity: 0, x: -50 });
+  gsap.set('main', { opacity: 0, y: 30 });
+  gsap.set('.sidebar-logo', { opacity: 0, scale: 0.5 });
+  gsap.set('.sidebar-section', { opacity: 0, y: 20 });
+
+  tl.to('aside', {
+    opacity: 1, x: 0, duration: 0.8, ease: 'power3.out'
+  })
+  .to('.sidebar-logo', {
+    opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(2)'
+  }, '-=0.3')
+  .to('.sidebar-section', {
+    opacity: 1, y: 0, stagger: 0.15, duration: 0.5, ease: 'power2.out'
+  }, '-=0.2')
+  .to('main', {
+    opacity: 1, y: 0, duration: 0.7, ease: 'power2.out'
+  }, '-=0.4')
+  .from('.sidebar-btn', {
+    opacity: 0, scale: 0.8, stagger: 0.05, duration: 0.3, ease: 'back.out(2)'
+  }, '-=0.3')
+  .from('#btn-new-db', {
+    opacity: 0, y: 20, duration: 0.4, ease: 'back.out(1.5)'
+  }, '-=0.2')
+  .from('#query-input', {
+    opacity: 0, scale: 0.95, duration: 0.3, ease: 'power2.out'
+  }, '-=0.2')
+  .from('#btn-execute', {
+    opacity: 0, x: 20, duration: 0.3, ease: 'back.out(1.5)'
+  }, '-=0.1')
+  .from('#output', {
+    opacity: 0, duration: 0.4
+  }, '-=0.1');
+
+  // Add class to enable normal transitions after animation
+  setTimeout(() => {
+    document.body.classList.add('animations-ready');
+  }, 1500);
+}
+
+document.addEventListener('DOMContentLoaded', dramaticEntrance);
 
 async function loadDatabases() {
   try {
