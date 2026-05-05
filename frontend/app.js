@@ -269,7 +269,7 @@ btnCreateDb.addEventListener('click', async () => {
     const res = await fetch(`${API}/api/query`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: `CREAR ${name}` }),
+      body: JSON.stringify({ query: `CREAR BASE DE DATOS ${name}` }),
     });
     const data = await res.json();
 

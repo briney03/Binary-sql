@@ -245,12 +245,12 @@ void parse_and_execute(char* input) {
         return;
     }
     else if (strncasecmp(input, "MOSTRAR BASES DE DATOS", 22) == 0) {
-        DefinicionDB* dbs[MAX_DATABASES];
+        DefinicionDB* dbs;
         int count;
-        listar_databases(dbs, &count);
+        listar_databases(&dbs, &count);
         printf("\n--- Bases de datos (%d) ---\n", count);
         for (int i = 0; i < count; i++) {
-            printf("  %s\n", dbs[i]->nombre);
+            printf("  %s\n", dbs[i].nombre);
         }
         return;
     }
