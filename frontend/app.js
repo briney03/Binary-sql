@@ -342,6 +342,7 @@ async function loadTables() {
           queryInput.value = `SELECCIONAR ${tableName}`;
           updateLineNumbers();
           currentTabName.textContent = `${tableName}.sql`;
+          executeQuery(); // <-- Ejecutar inmediatamente
         });
         tableList.appendChild(li);
       });
@@ -504,7 +505,10 @@ function dramaticEntrance() {
   }, 1500);
 }
 
-document.addEventListener('DOMContentLoaded', dramaticEntrance);
+document.addEventListener('DOMContentLoaded', () => {
+  dramaticEntrance();
+  loadDatabases();
+});
 
 async function loadDatabases() {
   try {
@@ -518,14 +522,29 @@ async function loadDatabases() {
     const dbCountEl = document.getElementById('db-count');
     
     const output = data.output || '';
-    const lines = output.split('\n').filter(l => l.trim() && !l.includes('---'));
+    const lines = output.split('\n').map(l => l.trim()).filter(l => l);
+    
+    const dbNames = [];
+    let isDbList = false;
+    
+    for (const line of lines) {
+      if (line.startsWith('--- Bases de datos')) {
+        isDbList = true;
+        continue;
+      }
+      if (isDbList) {
+        if (!line.startsWith('=>') && !line.startsWith('Info:') && !line.startsWith('---')) {
+          dbNames.push(line);
+        }
+      }
+    }
     
     dbListEl.innerHTML = '';
-    dbCountEl.textContent = lines.length;
-    
-    lines.forEach(db => {
-      const dbName = db.trim();
-      const li = document.createElement('li');
+    if (dbNames.length > 0) {
+      dbCountEl.textContent = dbNames.length;
+      dbNames.forEach(dbNameRaw => {
+        const dbName = dbNameRaw.trim();
+        const li = document.createElement('li');
       li.innerHTML = `
         <button class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-surface-600 transition-colors text-left">
           <svg class="w-4 h-4 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,6 +561,9 @@ async function loadDatabases() {
       });
       dbListEl.appendChild(li);
     });
+    } else {
+      dbCountEl.textContent = '0';
+    }
   } catch (e) {
     console.error("Error loading DBs", e);
   }
