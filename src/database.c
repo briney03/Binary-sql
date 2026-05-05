@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -5,6 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include "../includes/config.h"
 #include "../includes/types.h"
@@ -31,6 +34,58 @@ static int mkdir_recursive(const char* path) {
 static DefinicionDB databases[MAX_DATABASES];
 static int num_databases = 0;
 static char db_actual[MAX_NOMBRE] = {0};
+
+void init_databases(void) {
+    num_databases = 0;
+    mkdir("data", 0755); // ensures data dir exists
+    
+    DIR* d = opendir("data");
+    if (!d) return;
+    
+    struct dirent* dir;
+    while ((dir = readdir(d)) != NULL) {
+        if (dir->d_type == DT_DIR) {
+            if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0) continue;
+            
+            if (num_databases < MAX_DATABASES) {
+                DefinicionDB* db = &databases[num_databases];
+                memset(db, 0, sizeof(DefinicionDB));
+                strncpy(db->nombre, dir->d_name, MAX_NOMBRE - 1);
+                db->nombre[MAX_NOMBRE - 1] = '\0';
+                
+                // Load tables
+                char path[512];
+                snprintf(path, sizeof(path), "data/%s", dir->d_name);
+                DIR* td = opendir(path);
+                if (td) {
+                    struct dirent* tdir;
+                    while ((tdir = readdir(td)) != NULL) {
+                        char* ext = strstr(tdir->d_name, ".meta");
+                        if (ext && strcmp(ext, ".meta") == 0) {
+                            char tabla_nombre[MAX_NOMBRE];
+                            size_t name_len = ext - tdir->d_name;
+                            if (name_len >= MAX_NOMBRE) name_len = MAX_NOMBRE - 1;
+                            strncpy(tabla_nombre, tdir->d_name, name_len);
+                            tabla_nombre[name_len] = '\0';
+                            
+                            DefinicionTabla tdef;
+                            if (cargar_metadatos_tabla(db->nombre, tabla_nombre, &tdef) == 0) {
+                                if (db->num_tablas < MAX_TABLAS) {
+                                    db->tablas[db->num_tablas] = tdef;
+                                    db->num_tablas++;
+                                }
+                            }
+                        }
+                    }
+                    closedir(td);
+                }
+                
+                num_databases++;
+            }
+        }
+    }
+    closedir(d);
+}
 
 int crear_database(char* nombre) {
     if (num_databases >= MAX_DATABASES) {

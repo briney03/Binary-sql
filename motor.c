@@ -36,6 +36,8 @@ int main(void) {
     printf("   Escribe 'exit' para salir del motor.  \n");
     printf("=========================================\n\n");
 
+    init_databases();
+
     while (1) {
         print_prompt();
         read_input(input_buffer);

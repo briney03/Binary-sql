@@ -3,6 +3,7 @@
 
 #include "types.h"
 
+void init_databases(void);
 int crear_database(char* nombre);
 int usar_database(char* nombre);
 char* get_database_actual(void);
