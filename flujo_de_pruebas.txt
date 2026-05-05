@@ -1,0 +1,88 @@
+=========================================================
+      FLUJO DE PRUEBAS - MOTOR BINARY SQL v1.0
+=========================================================
+
+Sigue este flujo copiando y pegando cada comando en el 
+editor SQL de tu frontend para probar todas las funciones 
+de tu motor.
+
+---------------------------------------------------------
+FASE 1: Gestión de Bases de Datos
+---------------------------------------------------------
+1. Verifica qué bases de datos existen:
+   MOSTRAR BASES DE DATOS
+
+2. Crea una nueva base de datos para pruebas:
+   CREAR BASE DE DATOS universidad
+
+3. Cambia a la nueva base de datos (Nota: en el frontend puedes
+   hacerlo también haciendo clic en "universidad" en el menú):
+   USAR universidad
+
+
+---------------------------------------------------------
+FASE 2: Creación y Gestión de Tablas
+---------------------------------------------------------
+4. Crea una tabla con diferentes tipos de datos:
+   CREAR TABLA profesores (id INT, nombre STRING(50), salario FLOAT)
+
+5. Crea otra tabla para ver cómo se listan:
+   CREAR TABLA materias (id INT, titulo STRING(30), creditos INT)
+
+6. Verifica que ambas tablas se crearon correctamente:
+   MOSTRAR TABLAS
+
+7. Elimina una tabla que ya no necesitas:
+   ELIMINAR TABLA materias
+
+
+---------------------------------------------------------
+FASE 3: Inserción y Lectura de Datos (CRUD Básico)
+---------------------------------------------------------
+8. Inserta registros en la tabla profesores:
+   INSERTAR profesores (1, Juan Perez, 1500.50)
+   INSERTAR profesores (2, Ana Gomez, 1850.00)
+   INSERTAR profesores (3, Carlos Ruiz, 1420.75)
+
+9. Verifica que los datos se guardaron correctamente:
+   SELECCIONAR profesores
+
+10. Elimina un registro específico por su ID (ej. id 2):
+    ELIMINAR profesores 2
+
+11. Vuelve a consultar para verificar que Ana Gomez desapareció:
+    SELECCIONAR profesores
+
+
+---------------------------------------------------------
+FASE 4: Transacciones (Rollback/Commit)
+---------------------------------------------------------
+12. Inicia una transacción segura:
+    INICIAR TRANSACCION
+
+13. Inserta un dato temporal o por error:
+    INSERTAR profesores (99, Profesor Equivocado, 9999.99)
+
+14. Verifica que el dato está ahí temporalmente:
+    SELECCIONAR profesores
+
+15. ¡Arrepiéntete y deshaz la transacción!:
+    DESHACER
+
+16. Vuelve a consultar y verifica que el Profesor Equivocado no existe:
+    SELECCIONAR profesores
+
+
+---------------------------------------------------------
+FASE 5: Limpieza Total (Destrucción)
+---------------------------------------------------------
+17. Para terminar, puedes borrar toda la base de datos de prueba:
+    ELIMINAR BASE DE DATOS universidad
+
+18. Verifica que ya no existe:
+    MOSTRAR BASES DE DATOS
+
+=========================================================
+¡Felicidades! Si todo funcionó, tu motor y tu frontend 
+están en perfecta sincronía.
+=========================================================

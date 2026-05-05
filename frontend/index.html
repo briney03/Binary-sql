@@ -243,6 +243,31 @@
       </main>
     </div>
 
+    <!-- Modal Nueva DB con GSAP -->
+    <div id="modal-new-db" class="fixed inset-0 z-50 hidden items-center justify-center">
+      <div id="modal-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+      <div id="modal-content" class="relative bg-surface-800 border border-pink-500/30 rounded-2xl p-6 w-96 shadow-2xl shadow-pink-500/10">
+        <div class="absolute -inset-px rounded-2xl bg-gradient-to-r from-pink-500/20 via-transparent to-rose-500/20 pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-white">Nueva Base de Datos</h2>
+              <p class="text-xs text-slate-400">Binary SQL Motor</p>
+            </div>
+          </div>
+          <input type="text" id="new-db-name" placeholder="nombre_db.bin" class="w-full bg-surface-700/50 border border-surface-600 focus:border-pink-500 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-pink-500/20 transition-all mb-5"/>
+          <div class="flex gap-3">
+            <button id="btn-cancel-db" class="flex-1 px-4 py-2.5 border border-pink-500/50 text-pink-400 hover:bg-pink-500/10 rounded-xl text-sm font-medium transition-all">Cancelar</button>
+            <button id="btn-create-db" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-400 hover:to-rose-400 rounded-xl text-sm font-medium transition-all shadow-lg shadow-pink-500/25">Crear DB</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script type="module" src="/app.js"></script>
   </body>
 </html>

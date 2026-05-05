@@ -219,13 +219,51 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
   });
 });
 
-// Nueva DB - ejecuta CREAR directamente
-btnNewDb.addEventListener('click', async () => {
-  const name = prompt('Nombre de la nueva DB:');
+// Modal elements
+const modalNewDb = document.getElementById('modal-new-db');
+const modalContent = document.getElementById('modal-content');
+const modalBackdrop = document.getElementById('modal-backdrop');
+const newDbNameInput = document.getElementById('new-db-name');
+const btnCancelDb = document.getElementById('btn-cancel-db');
+const btnCreateDb = document.getElementById('btn-create-db');
+
+// GSAP animation for modal
+function showModal() {
+  modalNewDb.classList.remove('hidden');
+  modalNewDb.classList.add('flex');
+  gsap.fromTo(modalBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+  gsap.fromTo(modalContent,
+    { opacity: 0, scale: 0.85, y: -20 },
+    { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
+  );
+}
+
+function hideModal() {
+  gsap.to(modalContent, {
+    opacity: 0, scale: 0.85, y: -20, duration: 0.25, ease: 'power2.in',
+    onComplete: () => {
+      modalNewDb.classList.add('hidden');
+      modalNewDb.classList.remove('flex');
+    }
+  });
+  gsap.to(modalBackdrop, { opacity: 0, duration: 0.25 });
+}
+
+btnNewDb.addEventListener('click', () => {
+  newDbNameInput.value = '';
+  showModal();
+  setTimeout(() => newDbNameInput.focus(), 100);
+});
+
+btnCancelDb.addEventListener('click', hideModal);
+modalBackdrop.addEventListener('click', hideModal);
+
+btnCreateDb.addEventListener('click', async () => {
+  const name = newDbNameInput.value.trim();
   if (!name) return;
 
-  btnNewDb.disabled = true;
-  btnNewDb.textContent = '...';
+  btnCreateDb.disabled = true;
+  btnCreateDb.textContent = '...';
 
   try {
     const res = await fetch(`${API}/api/query`, {
@@ -241,17 +279,22 @@ btnNewDb.addEventListener('click', async () => {
       activeSchema.textContent = name;
       schemaStatus.className = 'w-2 h-2 rounded-full bg-emerald-500';
       setStatus(true, 'Conectado');
-      loadDatabases();
       loadTables();
+      hideModal();
     } else {
       addMessage('error', data.error || 'Error creando DB');
     }
   } catch (e) {
     addMessage('error', `Error: ${e.message}`);
   } finally {
-    btnNewDb.disabled = false;
-    btnNewDb.textContent = 'Nueva DB';
+    btnCreateDb.disabled = false;
+    btnCreateDb.textContent = 'Crear DB';
   }
+});
+
+newDbNameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') btnCreateDb.click();
+  if (e.key === 'Escape') hideModal();
 });
 
 async function loadTables() {
