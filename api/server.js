@@ -119,6 +119,66 @@ app.post('/api/create-db', (req, res) => {
     createProcess.stdin.end();
 });
 
+app.post('/api/delete-db', (req, res) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ error: 'Falta el nombre de la DB' });
+    }
+
+    const deleteProcess = spawn(MOTOR_EXEC, [], { cwd: MOTOR_CWD });
+    let stdoutData = '';
+    let stderrData = '';
+
+    deleteProcess.stdout.on('data', (data) => { stdoutData += data.toString(); });
+    deleteProcess.stderr.on('data', (data) => { stderrData += data.toString(); });
+
+    deleteProcess.on('close', (code) => {
+        const output = stdoutData.replace(/mibd(:[a-zA-Z0-9_]+)?>/g, '').trim();
+        if (code === 0 || output.includes('eliminada') || output.includes('éxito') || output.includes('eliminada')) {
+            return res.json({ success: true, output });
+        }
+        return res.status(500).json({ success: false, error: stderrData || output });
+    });
+
+    deleteProcess.on('error', (err) => {
+        res.status(500).json({ success: false, error: err.message });
+    });
+
+    deleteProcess.stdin.write(`ELIMINAR BASE DE DATOS ${name}\nSALIR\n`);
+    deleteProcess.stdin.end();
+});
+
+app.post('/api/rename-db', (req, res) => {
+    const { oldName, newName } = req.body;
+
+    if (!oldName || !newName) {
+        return res.status(400).json({ error: 'Faltan parametros: oldName y newName requeridos' });
+    }
+
+    const renameProcess = spawn(MOTOR_EXEC, [], { cwd: MOTOR_CWD });
+    let stdoutData = '';
+    let stderrData = '';
+
+    renameProcess.stdout.on('data', (data) => { stdoutData += data.toString(); });
+    renameProcess.stderr.on('data', (data) => { stderrData += data.toString(); });
+
+    renameProcess.on('close', (code) => {
+        const output = stdoutData.replace(/mibd(:[a-zA-Z0-9_]+)?>/g, '').trim();
+        if (code === 0 || output.includes('renombrada') || output.includes('éxito') || output.includes('renombrada')) {
+            return res.json({ success: true, output });
+        }
+        return res.status(500).json({ success: false, error: stderrData || output });
+    });
+
+    renameProcess.on('error', (err) => {
+        res.status(500).json({ success: false, error: err.message });
+    });
+
+    renameProcess.stdin.write(`RENOMBRAR BASE DE DATOS ${oldName} ${newName}\nSALIR\n`);
+    renameProcess.stdin.end();
+});
+
 app.listen(PORT, () => {
     console.log(`🚀 Bridge API corriendo en el puerto ${PORT}`);
     console.log(`🔗 Usando ejecutable de DB en: ${MOTOR_EXEC}`);

@@ -64,6 +64,7 @@ help:
 	@echo "    USAR <base_de_datos>           - Seleccionar base de datos"
 	@echo "    MOSTRAR BASES DE DATOS         - Listar bases de datos"
 	@echo "    ELIMINAR BASE DE DATOS <nombre> - Eliminar base de datos"
+	@echo "    RENOMBRAR BASE DE DATOS <viejo> <nuevo> - Renombrar base de datos"
 	@echo ""
 	@echo "  Tablas:"
 	@echo "    CREAR TABLA <nombre> (campo1 TIPO, ...) - Crear tabla"

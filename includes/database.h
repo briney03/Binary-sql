@@ -15,6 +15,7 @@ int es_tabla_dinamica(const char* db_nombre, const char* tabla_nombre);
 int listar_databases(DefinicionDB** resultado, int* cantidad);
 int listar_tablas(const char* db, DefinicionTabla* resultado, int* cantidad);
 int eliminar_database(char* nombre);
+int renombrar_database(char* nombre_viejo, char* nombre_nuevo);
 int eliminar_tabla(const char* db_nombre, const char* tabla_nombre);
 int table_exists(const char* db_nombre, const char* tabla_nombre);
 

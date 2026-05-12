@@ -227,6 +227,15 @@ const newDbNameInput = document.getElementById('new-db-name');
 const btnCancelDb = document.getElementById('btn-cancel-db');
 const btnCreateDb = document.getElementById('btn-create-db');
 
+// Modal renombrar
+const modalRenameDb = document.getElementById('modal-rename-db');
+const modalRenameBackdrop = document.getElementById('modal-rename-backdrop');
+const modalRenameContent = document.getElementById('modal-rename-content');
+const renameOldNameInput = document.getElementById('rename-db-old-name');
+const renameNewNameInput = document.getElementById('rename-db-new-name');
+const btnCancelRename = document.getElementById('btn-cancel-rename');
+const btnConfirmRename = document.getElementById('btn-confirm-rename');
+
 // GSAP animation for modal
 function showModal() {
   modalNewDb.classList.remove('hidden');
@@ -249,6 +258,31 @@ function hideModal() {
   gsap.to(modalBackdrop, { opacity: 0, duration: 0.25 });
 }
 
+// Modal renombrar
+function showRenameModal(oldName) {
+  renameOldNameInput.value = oldName;
+  renameNewNameInput.value = '';
+  modalRenameDb.classList.remove('hidden');
+  modalRenameDb.classList.add('flex');
+  gsap.fromTo(modalRenameBackdrop, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+  gsap.fromTo(modalRenameContent,
+    { opacity: 0, scale: 0.85, y: -20 },
+    { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
+  );
+  setTimeout(() => renameNewNameInput.focus(), 100);
+}
+
+function hideRenameModal() {
+  gsap.to(modalRenameContent, {
+    opacity: 0, scale: 0.85, y: -20, duration: 0.25, ease: 'power2.in',
+    onComplete: () => {
+      modalRenameDb.classList.add('hidden');
+      modalRenameDb.classList.remove('flex');
+    }
+  });
+  gsap.to(modalRenameBackdrop, { opacity: 0, duration: 0.25 });
+}
+
 btnNewDb.addEventListener('click', () => {
   newDbNameInput.value = '';
   showModal();
@@ -257,6 +291,49 @@ btnNewDb.addEventListener('click', () => {
 
 btnCancelDb.addEventListener('click', hideModal);
 modalBackdrop.addEventListener('click', hideModal);
+
+// Modal renombrar
+btnCancelRename.addEventListener('click', hideRenameModal);
+modalRenameBackdrop.addEventListener('click', hideRenameModal);
+
+btnConfirmRename.addEventListener('click', async () => {
+  const oldName = renameOldNameInput.value.trim();
+  const newName = renameNewNameInput.value.trim();
+  if (!oldName || !newName) return;
+
+  btnConfirmRename.disabled = true;
+  btnConfirmRename.textContent = '...';
+
+  try {
+    const res = await fetch(`${API}/api/rename-db`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldName, newName }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      addMessage('success', `DB "${oldName}" renombrada a "${newName}"`);
+      if (currentDb === oldName) {
+        currentDb = newName;
+        activeSchema.textContent = newName;
+      }
+      hideRenameModal();
+      loadDatabases();
+    } else {
+      addMessage('error', data.error || 'Error renombrando DB');
+    }
+  } catch (e) {
+    addMessage('error', `Error: ${e.message}`);
+  } finally {
+    btnConfirmRename.disabled = false;
+    btnConfirmRename.textContent = 'Renombrar';
+  }
+});
+
+renameNewNameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') btnConfirmRename.click();
+  if (e.key === 'Escape') hideRenameModal();
+});
 
 btnCreateDb.addEventListener('click', async () => {
   const name = newDbNameInput.value.trim();
@@ -545,13 +622,23 @@ async function loadDatabases() {
       dbNames.forEach(dbNameRaw => {
         const dbName = dbNameRaw.trim();
         const li = document.createElement('li');
-      li.innerHTML = `
-        <button class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-surface-600 transition-colors text-left">
-          <svg class="w-4 h-4 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-          </svg>
-          <span class="text-sm">${escapeHtml(dbName)}</span>
-        </button>`;
+        li.className = 'relative';
+        li.innerHTML = `
+          <button data-db="${escapeHtml(dbName)}" class="db-item w-full flex items-center gap-2 px-3 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-surface-600 transition-colors text-left">
+            <svg class="w-4 h-4 text-accent-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+            </svg>
+            <span class="text-sm">${escapeHtml(dbName)}</span>
+            <svg class="db-menu-btn w-3 h-3 ml-auto text-slate-500 hover:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+          <div class="db-context-menu hidden absolute right-0 top-full mt-1 bg-surface-700 border border-surface-600 rounded-lg shadow-xl z-50 py-1 min-w-[140px]">
+            <button class="db-rename w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-surface-600 hover:text-white transition-colors">
+              Renombrar
+            </button>
+            <button class="db-delete w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-surface-600 transition-colors">
+              Eliminar
+            </button>
+          </div>`;
       li.querySelector('button').addEventListener('click', () => {
         currentDb = dbName;
         document.getElementById('active-schema').textContent = dbName;
@@ -566,5 +653,98 @@ async function loadDatabases() {
     }
   } catch (e) {
     console.error("Error loading DBs", e);
+  }
+}
+
+// Context menu para DBs
+document.addEventListener('click', (e) => {
+  // Cerrar menús abiertos
+  document.querySelectorAll('.db-context-menu').forEach(menu => {
+    if (!menu.contains(e.target) && !menu.previousElementSibling.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
+  });
+
+  // Abrir menú
+  const menuBtn = e.target.closest('.db-menu-btn');
+  if (menuBtn) {
+    e.stopPropagation();
+    const li = menuBtn.closest('li');
+    const menu = li.querySelector('.db-context-menu');
+    menu.classList.toggle('hidden');
+    return;
+  }
+
+  // Renombrar
+  const renameBtn = e.target.closest('.db-rename');
+  if (renameBtn) {
+    e.stopPropagation();
+    const li = renameBtn.closest('li');
+    const dbName = li.querySelector('.db-item').getAttribute('data-db');
+    showRenameModal(dbName);
+    li.querySelector('.db-context-menu').classList.add('hidden');
+    return;
+  }
+
+  // Eliminar
+  const deleteBtn = e.target.closest('.db-delete');
+  if (deleteBtn) {
+    e.stopPropagation();
+    const li = deleteBtn.closest('li');
+    const dbName = li.querySelector('.db-item').getAttribute('data-db');
+    if (confirm(`¿Eliminar DB "${dbName}" permanentemente?`)) {
+      deleteDb(dbName);
+    }
+    li.querySelector('.db-context-menu').classList.add('hidden');
+  }
+});
+
+async function deleteDb(name) {
+  try {
+    const res = await fetch(`${API}/api/delete-db`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      addMessage('success', `DB "${name}" eliminada`);
+      if (currentDb === name) {
+        currentDb = '';
+        activeSchema.textContent = 'Ninguno';
+        schemaStatus.className = 'w-2 h-2 rounded-full bg-slate-600';
+        setStatus(false, 'Offline');
+        tableList.innerHTML = '';
+        tableCount.textContent = '0';
+      }
+      loadDatabases();
+    } else {
+      addMessage('error', data.error || 'Error eliminando DB');
+    }
+  } catch (e) {
+    addMessage('error', `Error: ${e.message}`);
+  }
+}
+
+async function renameDb(oldName, newName) {
+  try {
+    const res = await fetch(`${API}/api/rename-db`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ oldName, newName }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      addMessage('success', `DB "${oldName}" renombrada a "${newName}"`);
+      if (currentDb === oldName) {
+        currentDb = newName;
+        activeSchema.textContent = newName;
+      }
+      loadDatabases();
+    } else {
+      addMessage('error', data.error || 'Error renombrando DB');
+    }
+  } catch (e) {
+    addMessage('error', `Error: ${e.message}`);
   }
 }

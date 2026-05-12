@@ -267,6 +267,31 @@
       </div>
     </div>
 
+    <!-- Modal Renombrar DB -->
+    <div id="modal-rename-db" class="fixed inset-0 z-50 hidden items-center justify-center">
+      <div id="modal-rename-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+      <div id="modal-rename-content" class="relative bg-surface-800 border border-cyan-500/30 rounded-2xl p-6 w-96 shadow-2xl shadow-cyan-500/10">
+        <div class="absolute -inset-px rounded-2xl bg-gradient-to-r from-cyan-500/20 via-transparent to-teal-500/20 pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-teal-600 flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-white">Renombrar Base de Datos</h2>
+              <p class="text-xs text-slate-400">Binary SQL Motor</p>
+            </div>
+          </div>
+          <input type="text" id="rename-db-old-name" disabled class="w-full bg-surface-700/30 border border-surface-600 text-slate-400 rounded-xl px-4 py-3 text-sm mb-3 cursor-not-allowed"/>
+          <input type="text" id="rename-db-new-name" placeholder="nuevo_nombre.bin" class="w-full bg-surface-700/50 border border-surface-600 focus:border-cyan-500 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all mb-5"/>
+          <div class="flex gap-3">
+            <button id="btn-cancel-rename" class="flex-1 px-4 py-2.5 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 rounded-xl text-sm font-medium transition-all">Cancelar</button>
+            <button id="btn-confirm-rename" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-teal-500 text-white hover:from-cyan-400 hover:to-teal-400 rounded-xl text-sm font-medium transition-all shadow-lg shadow-cyan-500/25">Renombrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script type="module" src="/app.js"></script>
   </body>

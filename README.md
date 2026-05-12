@@ -44,6 +44,7 @@ make help     # mostrar ayuda
 CREAR BASE DE DATOS miapp
 USAR miapp
 MOSTRAR BASES DE DATOS
+RENOMBRAR BASE DE DATOS miapp miapp_new
 ELIMINAR BASE DE DATOS miapp
 ```
 
@@ -183,6 +184,7 @@ campo:telefono|2|14
 | `CREAR BASE DE DATOS <nombre>` | Crear base de datos |
 | `USAR <base_de_datos>` | Seleccionar base de datos |
 | `MOSTRAR BASES DE DATOS` | Listar bases de datos |
+| `RENOMBRAR BASE DE DATOS <viejo> <nuevo>` | Renombrar base de datos |
 | `ELIMINAR BASE DE DATOS <nombre>` | Eliminar base de datos |
 
 ### Tablas

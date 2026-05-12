@@ -186,6 +186,22 @@ void parse_and_execute(char* input) {
         }
         return;
     }
+    else if (strncasecmp(input, "RENOMBRAR BASE DE DATOS", 23) == 0) {
+        char* ptr = input + 23;
+        ptr = saltar_espacios(ptr);
+        if (*ptr) {
+            char nombre_viejo[50], nombre_nuevo[50];
+            int matched = sscanf(ptr, "%49s %49s", nombre_viejo, nombre_nuevo);
+            if (matched == 2) {
+                renombrar_database(nombre_viejo, nombre_nuevo);
+            } else {
+                printf("Uso: RENOMBRAR BASE DE DATOS <nombre_viejo> <nombre_nuevo>\n");
+            }
+        } else {
+            printf("Uso: RENOMBRAR BASE DE DATOS <nombre_viejo> <nombre_nuevo>\n");
+        }
+        return;
+    }
     else if (strncasecmp(input, "CREAR TABLA", 11) == 0) {
         char* ptr = input + 11;
         ptr = saltar_espacios(ptr);

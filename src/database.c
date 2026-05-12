@@ -260,6 +260,33 @@ int listar_tablas(const char* db, DefinicionTabla* resultado, int* cantidad) {
     return 0;
 }
 
+int renombrar_database(char* nombre_viejo, char* nombre_nuevo) {
+    for (int i = 0; i < num_databases; i++) {
+        if (strcmp(databases[i].nombre, nombre_viejo) == 0) {
+            char old_path[256], new_path[256];
+            sprintf(old_path, "data/%s", nombre_viejo);
+            sprintf(new_path, "data/%s", nombre_nuevo);
+
+            if (rename(old_path, new_path) != 0) {
+                printf("Error: No se pudo renombrar '%s' a '%s'.\n", nombre_viejo, nombre_nuevo);
+                return -1;
+            }
+
+            strncpy(databases[i].nombre, nombre_nuevo, MAX_NOMBRE - 1);
+            databases[i].nombre[MAX_NOMBRE - 1] = '\0';
+
+            if (strcmp(db_actual, nombre_viejo) == 0) {
+                strcpy(db_actual, nombre_nuevo);
+            }
+
+            printf("=> Base de datos '%s' renombrada a '%s'.\n", nombre_viejo, nombre_nuevo);
+            return 0;
+        }
+    }
+    ultimo_error = ERR_BD_NO_EXISTE;
+    return -1;
+}
+
 int eliminar_database(char* nombre) {
     for (int i = 0; i < num_databases; i++) {
         if (strcmp(databases[i].nombre, nombre) == 0) {
