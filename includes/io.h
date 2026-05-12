@@ -14,5 +14,6 @@ int actualizar_registro_dinamico(const char* db, const char* tabla, int id, char
 void liberar_valores(char** valores, int num_valores);
 void obtener_ultimo_id(const char* db, const char* tabla, char* resultado, int max_len);
 void construir_ruta_tabla(const char* db_nombre, const char* tabla_nombre, char* ruta, size_t tam);
+int id_existe_en_tabla(const char* db, const char* tabla, const char* id);
 
 #endif

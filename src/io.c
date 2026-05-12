@@ -151,6 +151,36 @@ int escribir_registro_dinamico(const char* db, const char* tabla, char** valores
     return 0;
 }
 
+int id_existe_en_tabla(const char* db, const char* tabla, const char* id) {
+    char ruta[256];
+    construir_ruta_tabla(db, tabla, ruta, sizeof(ruta));
+
+    FILE* f = fopen(ruta, "r");
+    if (!f) return 0; // Archivo no existe = no existe ID
+
+    char linea[MAX_LINEA];
+    while (fgets(linea, sizeof(linea), f)) {
+        size_t len = strlen(linea);
+        while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r')) {
+            linea[len-1] = '\0';
+            len--;
+        }
+        if (len == 0) continue;
+
+        // Primera columna hasta el primer |
+        char* pipe = strchr(linea, '|');
+        if (pipe) {
+            size_t id_len = pipe - linea;
+            if (strlen(id) == id_len && strncmp(linea, id, id_len) == 0) {
+                fclose(f);
+                return 1; // ID existe
+            }
+        }
+    }
+    fclose(f);
+    return 0; // ID no existe
+}
+
 void obtener_ultimo_id(const char* db, const char* tabla, char* resultado, int max_len) {
     char ruta[256];
     construir_ruta_tabla(db, tabla, ruta, sizeof(ruta));

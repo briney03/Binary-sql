@@ -328,7 +328,10 @@ void parse_and_execute(char* input) {
         }
 
         if (db_actual && table_exists(db_actual, tabla)) {
-            if (escribir_registro_dinamico(db_actual, tabla, valores, num_valores) == 0) {
+            // Validar ID unico (primera columna)
+            if (num_valores > 0 && id_existe_en_tabla(db_actual, tabla, valores[0])) {
+                printf("Error: El ID '%s' ya existe en '%s'.\n", valores[0], tabla);
+            } else if (escribir_registro_dinamico(db_actual, tabla, valores, num_valores) == 0) {
                 printf("=> Registro insertado en '%s'.\n", tabla);
                 if (esta_en_transaccion()) {
                     char datos_nuevos[MAX_LINEA] = {0};
