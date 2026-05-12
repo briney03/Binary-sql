@@ -12,7 +12,7 @@ const dbSessions = {};
 
 // Configuración recomendada para despliegue
 app.use(cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: '*',
     methods: ['GET', 'POST']
 }));
 app.use(express.json());
