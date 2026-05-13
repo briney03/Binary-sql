@@ -352,6 +352,68 @@ void parse_and_execute(char* input) {
         free(valores);
         return;
     }
+    else if (strncasecmp(input, "ACTUALIZAR", 10) == 0) {
+        char* ptr = input + 10;
+        ptr = saltar_espacios(ptr);
+
+        char tabla_copy[256];
+        strncpy(tabla_copy, ptr, 255);
+        tabla_copy[255] = '\0';
+
+        // Formato: ACTUALIZAR tabla id (val1, val2, ...)
+        char nombre_tabla[50];
+        int id;
+
+        if (sscanf(tabla_copy, "%49s %d", nombre_tabla, &id) != 2) {
+            printf("Uso: ACTUALIZAR <tabla> <id> (val1, val2, ...)\n");
+            return;
+        }
+
+        if (!db_actual) {
+            printf("Error: Seleccione una base de datos con USAR <nombre>\n");
+            return;
+        }
+
+        if (!table_exists(db_actual, nombre_tabla)) {
+            printf("Error: Tabla '%s' no existe.\n", nombre_tabla);
+            return;
+        }
+
+        char** valores = malloc(MAX_CAMPOS * sizeof(char*));
+        int num_valores = 0;
+
+        // Buscar el parentesis de inicio de valores
+        char* paren = strchr(ptr, '(');
+        if (!paren) {
+            printf("Uso: ACTUALIZAR <tabla> <id> (val1, val2, ...)\n");
+            free(valores);
+            return;
+        }
+
+        if (parsear_valores_insert(paren - 1, valores, &num_valores) != 0) {
+            printf("Error: No se pudieron parsear los valores.\n");
+            free(valores);
+            return;
+        }
+
+        if (actualizar_registro_dinamico(db_actual, nombre_tabla, id, valores, num_valores) == 0) {
+            printf("=> ID %d actualizado en '%s'.\n", id, nombre_tabla);
+            if (esta_en_transaccion()) {
+                char datos_nuevos[MAX_LINEA] = {0};
+                for (int i = 0; i < num_valores; i++) {
+                    if (i > 0) strncat(datos_nuevos, "|", MAX_LINEA - strlen(datos_nuevos) - 1);
+                    strncat(datos_nuevos, valores[i], MAX_LINEA - strlen(datos_nuevos) - 1);
+                }
+                registrar_en_log(nombre_tabla, id, OP_UPDATE, NULL, datos_nuevos);
+            }
+        } else {
+            printf("Error: ID %d no encontrado en '%s'.\n", id, nombre_tabla);
+        }
+
+        for (int i = 0; i < num_valores; i++) free(valores[i]);
+        free(valores);
+        return;
+    }
     else if (strncasecmp(input, "ELIMINAR", 8) == 0) {
         char* ptr = input + 8;
         ptr = saltar_espacios(ptr);
@@ -389,6 +451,7 @@ void parse_and_execute(char* input) {
         }
         return;
     }
+
 
     printf("Error: Comando '%s' no reconocido.\n", input);
 }

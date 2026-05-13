@@ -41,19 +41,61 @@ function execMotor(commands) {
         const motorProcess = spawn(MOTOR_EXEC, [], { cwd: MOTOR_CWD });
         let stdoutData = '';
         let stderrData = '';
+        let settled = false;
+
+        // Timeout por si el motor no responde en 10 segundos
+        const timeout = setTimeout(() => {
+            if (!settled) {
+                settled = true;
+                motorProcess.kill();
+                reject(new Error('El motor tardó demasiado en responder (timeout 10s)'));
+            }
+        }, 10000);
 
         motorProcess.stdout.on('data', (data) => { stdoutData += data.toString(); });
         motorProcess.stderr.on('data', (data) => { stderrData += data.toString(); });
 
         motorProcess.on('close', (code) => {
-            resolve({ stdout: stdoutData, stderr: stderrData, code });
-        });
-        motorProcess.on('error', (err) => {
-            reject(err);
+            clearTimeout(timeout);
+            if (!settled) {
+                settled = true;
+                resolve({ stdout: stdoutData, stderr: stderrData, code });
+            }
         });
 
-        motorProcess.stdin.write(commands);
-        motorProcess.stdin.end();
+        motorProcess.on('error', (err) => {
+            clearTimeout(timeout);
+            if (!settled) {
+                settled = true;
+                reject(err);
+            }
+        });
+
+        // Manejar error en stdin (EPIPE) sin crashear Node
+        motorProcess.stdin.on('error', (err) => {
+            if (err.code !== 'EPIPE') {
+                clearTimeout(timeout);
+                if (!settled) {
+                    settled = true;
+                    reject(err);
+                }
+            }
+            // Si es EPIPE, ignorar: el motor ya cerró stdin, esperamos el 'close'
+        });
+
+        try {
+            motorProcess.stdin.write(commands);
+            motorProcess.stdin.end();
+        } catch (err) {
+            // Capturar errores síncronos de write (poco común pero posible)
+            if (err.code !== 'EPIPE') {
+                clearTimeout(timeout);
+                if (!settled) {
+                    settled = true;
+                    reject(err);
+                }
+            }
+        }
     });
 }
 
@@ -170,6 +212,33 @@ app.post('/api/query', async (req, res) => {
         }
 
         return res.json({ success: true, output: result });
+    }
+
+    // ACTUALIZAR dentro de transaccion: trackear para rollback
+    if (upperQuery.startsWith('ACTUALIZAR')) {
+        if (!db) {
+            return res.status(400).json({ success: false, error: 'No hay DB seleccionada' });
+        }
+        const session = getSession(db);
+
+        // Extraer tabla e id para poder hacer rollback
+        const match = query.match(/ACTUALIZAR\s+(\S+)\s+(\d+)/i);
+        const tabla = match ? match[1] : 'unknown';
+        const id = match ? match[2] : null;
+
+        // Ejecutar el ACTUALIZAR
+        const result = await execQuery(db, query);
+
+        if (session.txActive && id) {
+            session.pendingQueries.push({
+                type: 'UPDATE',
+                tabla: tabla,
+                id: id,
+                original: query
+            });
+        }
+
+        return res.json({ success: !result.toLowerCase().includes('error'), output: result });
     }
 
     // Query normal sin transaccion

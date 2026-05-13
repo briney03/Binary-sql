@@ -353,3 +353,96 @@ int eliminar_registro_dinamico(const char* db, const char* tabla, int id) {
         return -1;
     }
 }
+
+int actualizar_registro_dinamico(const char* db, const char* tabla, int id, char** valores, int num_valores) {
+    DefinicionTabla def;
+    if (cargar_metadatos_tabla(db, tabla, &def) != 0) {
+        ultimo_error = ERR_TABLA_NO_EXISTE;
+        return -1;
+    }
+
+    // El numero de valores debe coincidir con los campos de la tabla (sin contar el ID)
+    // Aceptamos num_campos-1 valores (campos a actualizar excepto el ID) o num_campos completo
+    if (num_valores != def.num_campos - 1 && num_valores != def.num_campos) {
+        ultimo_error = ERR_SINTAXIS;
+        return -1;
+    }
+
+    char ruta[256];
+    construir_ruta_tabla(db, tabla, ruta, sizeof(ruta));
+
+    char ruta_tmp[300];
+    snprintf(ruta_tmp, sizeof(ruta_tmp), "%s.tmp", ruta);
+
+    FILE* f_orig = fopen(ruta, "r");
+    if (!f_orig) {
+        ultimo_error = ERR_ARCHIVO_NO_ENCONTRADO;
+        return -1;
+    }
+
+    FILE* f_tmp = fopen(ruta_tmp, "w");
+    if (!f_tmp) {
+        fclose(f_orig);
+        return -1;
+    }
+
+    char linea[MAX_LINEA];
+    int linea_actualizada = 0;
+
+    while (fgets(linea, sizeof(linea), f_orig)) {
+        size_t len = strlen(linea);
+        while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r')) {
+            linea[len-1] = '\0';
+            len--;
+        }
+        if (len == 0) continue;
+
+        // Extraer el ID de la primera columna
+        int first_pipe = -1;
+        for (int i = 0; i < (int)len; i++) {
+            if (linea[i] == '|') {
+                first_pipe = i;
+                break;
+            }
+        }
+
+        if (first_pipe > 0) {
+            linea[first_pipe] = '\0';
+            int id_linea = atoi(linea);
+            linea[first_pipe] = '|';
+
+            if (id_linea == id) {
+                // Reemplazar la linea con el ID original + nuevos valores
+                fprintf(f_tmp, "%d", id);
+                if (num_valores == def.num_campos - 1) {
+                    // El usuario paso solo los campos sin el ID
+                    for (int i = 0; i < num_valores; i++) {
+                        fprintf(f_tmp, "|%s", valores[i]);
+                    }
+                } else {
+                    // El usuario paso todos los campos incluyendo el ID
+                    for (int i = 1; i < num_valores; i++) {
+                        fprintf(f_tmp, "|%s", valores[i]);
+                    }
+                }
+                fprintf(f_tmp, "\n");
+                linea_actualizada = 1;
+                continue;
+            }
+        }
+
+        fprintf(f_tmp, "%s\n", linea);
+    }
+
+    fclose(f_orig);
+    fclose(f_tmp);
+
+    if (linea_actualizada) {
+        rename(ruta_tmp, ruta);
+        return 0;
+    } else {
+        remove(ruta_tmp);
+        ultimo_error = ERR_ID_NO_ENCONTRADO;
+        return -1;
+    }
+}

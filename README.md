@@ -60,7 +60,9 @@ ELIMINAR TABLA clientes
 INSERTAR clientes (1, Juan, 5551234)
 INSERTAR clientes (2, Maria, 5555678)
 SELECCIONAR clientes
-ELIMINAR clientes 1
+ACTUALIZAR clientes 1 (Juan Actualizado, 5550000)
+SELECCIONAR clientes
+ELIMINAR clientes 2
 SELECCIONAR clientes
 ```
 
@@ -110,34 +112,134 @@ INSERTAR cursos (103, Fisica, 5)
 SELECCIONAR estudiantes
 SELECCIONAR cursos
 
-# 8. Eliminar un registro
-ELIMINAR estudiantes 2
+# 8. Actualizar un registro (UPDATE)
+ACTUALIZAR estudiantes 1 (Juan Perez Actualizado, 9.5)
 
-# 9. Ver estudiantes después de eliminar
+# 9. Ver estudiantes después de actualizar
 SELECCIONAR estudiantes
 
-# 10. Probar transacciones
+# 10. Eliminar un registro
+ELIMINAR estudiantes 2
+
+# 11. Ver estudiantes después de eliminar
+SELECCIONAR estudiantes
+
+# 12. Probar transacciones
 INICIAR TRANSACCION
 INSERTAR estudiantes (4, Ana Gomez, 8.0)
 SELECCIONAR estudiantes
 DESHACER
 SELECCIONAR estudiantes
 
-# 11. Confirmar transacción
+# 13. Confirmar transacción
 INICIAR TRANSACCION
 INSERTAR estudiantes (5, Pedro Santos, 8.5)
+ACTUALIZAR estudiantes 3 (Carlos Ruiz, 9.0)
 SELECCIONAR estudiantes
 CONFIRMAR
 SELECCIONAR estudiantes
 
-# 12. Eliminar tabla y base de datos
+# 14. Eliminar tabla y base de datos
 ELIMINAR TABLA estudiantes
 MOSTRAR TABLAS
 ELIMINAR BASE DE DATOS escuela
 MOSTRAR BASES DE DATOS
 
-# 13. Salir
+# 15. Salir
 SALIR
+```
+
+## Scripts de Ejemplo
+
+### Script 1 — CRUD Completo (empleados)
+
+Guarda como `demo_crud.txt` y ejecuta con: `./motor < demo_crud.txt`
+
+```sql
+CREAR BASE DE DATOS empresa
+USAR empresa
+CREAR TABLA empleados (id INT, nombre STRING(50), salario FLOAT)
+
+-- Insertar
+INSERTAR empleados (1, Alice, 45000)
+INSERTAR empleados (2, Bob, 38000)
+INSERTAR empleados (3, Carlos, 52000)
+SELECCIONAR empleados
+
+-- Actualizar salario de Bob
+ACTUALIZAR empleados 2 (Bob, 42000)
+SELECCIONAR empleados
+
+-- Eliminar a Carlos
+ELIMINAR empleados 3
+SELECCIONAR empleados
+
+ELIMINAR BASE DE DATOS empresa
+SALIR
+```
+
+### Script 2 — Transacciones con UPDATE
+
+Guarda como `demo_tx.txt` y ejecuta con: `./motor < demo_tx.txt`
+
+```sql
+CREAR BASE DE DATOS inventario
+USAR inventario
+CREAR TABLA productos (id INT, nombre STRING(50), stock INT)
+
+INSERTAR productos (1, Manzanas, 100)
+INSERTAR productos (2, Naranjas, 50)
+SELECCIONAR productos
+
+-- Transacción que se confirma
+INICIAR TRANSACCION
+ACTUALIZAR productos 1 (Manzanas, 90)
+INSERTAR productos (3, Peras, 75)
+CONFIRMAR
+SELECCIONAR productos
+
+-- Transacción que se deshace
+INICIAR TRANSACCION
+ACTUALIZAR productos 2 (Naranjas, 999)
+INSERTAR productos (4, Uvas, 30)
+DESHACER
+SELECCIONAR productos
+
+ELIMINAR BASE DE DATOS inventario
+SALIR
+```
+
+### Script 3 — API REST (curl)
+
+```bash
+# Crear base de datos
+curl -X POST http://localhost:3000/api/create-db \
+  -H "Content-Type: application/json" \
+  -d '{"name": "tienda"}'
+
+# Insertar
+curl -X POST http://localhost:3000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"db": "tienda", "query": "CREAR TABLA productos (id INT, nombre STRING, precio FLOAT)"}'
+
+curl -X POST http://localhost:3000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"db": "tienda", "query": "INSERTAR productos (1, Laptop, 15000)"}'
+
+# Actualizar
+curl -X POST http://localhost:3000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"db": "tienda", "query": "ACTUALIZAR productos 1 (Laptop Pro, 18000)"}'
+
+# Consultar
+curl -X POST http://localhost:3000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"db": "tienda", "query": "SELECCIONAR productos"}'
+
+# Eliminar
+curl -X POST http://localhost:3000/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"db": "tienda", "query": "ELIMINAR productos 1"}'
 ```
 
 ## Tipos de Datos para CREATE TABLE
@@ -199,6 +301,7 @@ campo:telefono|2|14
 |---------|-------------|
 | `INSERTAR <tabla> (val1, val2, ...)` | Insertar registro |
 | `SELECCIONAR <tabla>` | Mostrar todos los registros |
+| `ACTUALIZAR <tabla> <id> (val1, val2, ...)` | Actualizar registro por ID |
 | `ELIMINAR <tabla> <id>` | Eliminar registro por ID |
 
 ### Transacciones
@@ -217,16 +320,21 @@ campo:telefono|2|14
 ## Notas Importantes
 
 1. **Sintaxis de CREATE TABLE**: Usa `campo TIPO` no `campo(tam)`
-   - ✅ `CREATE TABLA clientes (id INT, nombre STRING(50))`
-   - ❌ `CREATE TABLA clientes (id INT, nombre(50))`
+   - ✅ `CREAR TABLA clientes (id INT, nombre STRING(50))`
+   - ❌ `CREAR TABLA clientes (id INT, nombre(50))`
 
 2. **Sintaxis de INSERTAR**: Usa paréntesis con valores separados por comas
    - ✅ `INSERTAR clientes (1, Juan, 5551234)`
    - ❌ `INSERTAR clientes VALUES 1, Juan, 5551234`
 
-3. **Transacciones**: Los cambios solo se persisten al ejecutar `CONFIRMAR` o al salir del programa sin errores
+3. **Sintaxis de ACTUALIZAR**: Pasa los valores de todos los campos **excepto el ID** entre paréntesis
+   - ✅ `ACTUALIZAR clientes 1 (Juan Nuevo, 5550000)`
+   - ❌ `ACTUALIZAR clientes 1 Juan Nuevo 5550000`
+   - El ID siempre se conserva; solo se reemplazan los demás campos
 
-4. **Tipos de datos**: Son case-insensitive (INT = int = Int)
+4. **Transacciones**: Los cambios solo se persisten al ejecutar `CONFIRMAR` o al salir del programa sin errores
+
+5. **Tipos de datos**: Son case-insensitive (INT = int = Int)
 
 ## Limitación de Transacciones en API
 
