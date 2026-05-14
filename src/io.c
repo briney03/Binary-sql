@@ -181,6 +181,43 @@ int id_existe_en_tabla(const char* db, const char* tabla, const char* id) {
     return 0; // ID no existe
 }
 
+// Lee los valores de un registro por ID y los devuelve como cadena separada por '|'
+// El buffer recibe: "val1|val2|val3" (SIN el ID, para usar directamente en rollback)
+int leer_linea_registro(const char* db, const char* tabla, int id, char* buffer, size_t max_len) {
+    char ruta[256];
+    construir_ruta_tabla(db, tabla, ruta, sizeof(ruta));
+
+    FILE* f = fopen(ruta, "r");
+    if (!f) return -1;
+
+    char linea[MAX_LINEA];
+    while (fgets(linea, sizeof(linea), f)) {
+        size_t len = strlen(linea);
+        while (len > 0 && (linea[len-1] == '\n' || linea[len-1] == '\r')) {
+            linea[len-1] = '\0';
+            len--;
+        }
+        if (len == 0) continue;
+
+        char* pipe = strchr(linea, '|');
+        if (pipe) {
+            *pipe = '\0';
+            int id_linea = atoi(linea);
+            *pipe = '|';
+
+            if (id_linea == id) {
+                // Devolver solo los valores despues del ID
+                strncpy(buffer, pipe + 1, max_len - 1);
+                buffer[max_len - 1] = '\0';
+                fclose(f);
+                return 0;
+            }
+        }
+    }
+    fclose(f);
+    return -1; // ID no encontrado
+}
+
 void obtener_ultimo_id(const char* db, const char* tabla, char* resultado, int max_len) {
     char ruta[256];
     construir_ruta_tabla(db, tabla, ruta, sizeof(ruta));

@@ -1,0 +1,7 @@
+# Schema for table: emp
+nombre:emp
+modo:1
+num_campos:3
+campo:id|0|4
+campo:nombre|2|50
+campo:salario|0|4

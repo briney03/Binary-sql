@@ -111,6 +111,9 @@ void registrar_en_log(const char* tabla, int id, OperacionLog operacion, const c
         fprintf(f, "INSERT|%s|%s\n", tabla, datos_nuevos);
     } else if (operacion == OP_DELETE && datos_previos) {
         fprintf(f, "DELETE|%s|%d|%s\n", tabla, id, datos_previos);
+    } else if (operacion == OP_UPDATE && datos_previos) {
+        // Guardamos los datos ANTERIORES al update para poder revertirlos
+        fprintf(f, "UPDATE|%s|%d|%s\n", tabla, id, datos_previos);
     }
     fclose(f);
 }
@@ -183,6 +186,46 @@ void deshacer_transaccion(void) {
                 } else {
                     if (f) fclose(f);
                     if (tmp) fclose(tmp);
+                }
+            }
+        } else if (strncmp(copia, "UPDATE|", 7) == 0) {
+            // Formato: UPDATE|tabla|id|val1|val2|...
+            char* ptr = copia + 7;
+            char tabla[50];
+            int undo_id;
+            char datos_orig[MAX_LINEA];
+
+            // sscanf para tabla e id, el resto son los valores originales
+            if (sscanf(ptr, "%49[^|]|%d|", tabla, &undo_id) == 2) {
+                // Saltar "tabla|id|" para llegar a los valores
+                char* p = strchr(ptr, '|');          // salta tabla
+                if (p) p = strchr(p + 1, '|');       // salta id
+                if (p) {
+                    strncpy(datos_orig, p + 1, MAX_LINEA - 1);
+                    datos_orig[MAX_LINEA - 1] = '\0';
+
+                    // Parsear valores originales separados por '|'
+                    char** valores = malloc(MAX_CAMPOS * sizeof(char*));
+                    int num_vals = 0;
+                    char copia_datos[MAX_LINEA];
+                    strncpy(copia_datos, datos_orig, MAX_LINEA - 1);
+                    copia_datos[MAX_LINEA - 1] = '\0';
+
+                    char* token = strtok(copia_datos, "|");
+                    while (token && num_vals < MAX_CAMPOS) {
+                        valores[num_vals] = strdup(token);
+                        num_vals++;
+                        token = strtok(NULL, "|");
+                    }
+
+                    if (actualizar_registro_dinamico(tx_db_nombre, tabla, undo_id, valores, num_vals) == 0) {
+                        printf("  (undo UPDATE en '%s', ID %d)\n", tabla, undo_id);
+                    } else {
+                        printf("  (Warning: no se pudo revertir UPDATE en '%s', ID %d)\n", tabla, undo_id);
+                    }
+
+                    for (int j = 0; j < num_vals; j++) free(valores[j]);
+                    free(valores);
                 }
             }
         }

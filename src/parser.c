@@ -396,15 +396,19 @@ void parse_and_execute(char* input) {
             return;
         }
 
+        // Leer datos PREVIOS antes de modificar (necesario para rollback)
+        char datos_previos[MAX_LINEA] = {0};
+        int tiene_previos = 0;
+        if (esta_en_transaccion()) {
+            tiene_previos = (leer_linea_registro(db_actual, nombre_tabla, id,
+                                                  datos_previos, MAX_LINEA) == 0);
+        }
+
         if (actualizar_registro_dinamico(db_actual, nombre_tabla, id, valores, num_valores) == 0) {
             printf("=> ID %d actualizado en '%s'.\n", id, nombre_tabla);
-            if (esta_en_transaccion()) {
-                char datos_nuevos[MAX_LINEA] = {0};
-                for (int i = 0; i < num_valores; i++) {
-                    if (i > 0) strncat(datos_nuevos, "|", MAX_LINEA - strlen(datos_nuevos) - 1);
-                    strncat(datos_nuevos, valores[i], MAX_LINEA - strlen(datos_nuevos) - 1);
-                }
-                registrar_en_log(nombre_tabla, id, OP_UPDATE, NULL, datos_nuevos);
+            if (esta_en_transaccion() && tiene_previos) {
+                // Guardar datos PREVIOS para poder revertir en DESHACER
+                registrar_en_log(nombre_tabla, id, OP_UPDATE, datos_previos, NULL);
             }
         } else {
             printf("Error: ID %d no encontrado en '%s'.\n", id, nombre_tabla);
